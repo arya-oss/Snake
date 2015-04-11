@@ -30,16 +30,22 @@ public class Game extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				dispose();
-				new Game();
+				new Game().board.start();
 			}
 		});
 		
-		btnPause = new JButton("Pause");
+		btnPause = new JButton("Pause/Resume");
 		btnPause.setSize(100, 40);
 		btnPause.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				
+				if(board.isPause()){
+					board.setResume();
+				} else
+					board.setPause();
+				btnPause.setFocusable(false);
+				board.requestFocus(true);
+				board.requestFocusInWindow();
 			}
 		});
 		pnl.add(btnPause);
@@ -48,14 +54,12 @@ public class Game extends JFrame {
 		getContentPane().add(lbl, BorderLayout.NORTH);
 		getContentPane().add(pnl, BorderLayout.SOUTH);
 		getContentPane().add(board, BorderLayout.CENTER);
-		board.setFocusable(true);
 		board.requestFocus(true);
 		requestFocusInWindow();
 		setResizable(false);
 		setVisible(true);
 	}
 	public static void main(String[] args) {
-		Game g = new Game();
-		g.board.start();
+		new Game().board.start();
 	}
 }

@@ -15,15 +15,17 @@ public class SnakeBoard extends JPanel implements Runnable {
 	
 	private Vector<Block> block;
 	private Block head;
-	private Thread thread;
+	public Thread thread;
 	boolean gameover;
 	private int N = 6;
 	private Rectangle food;
 	private Random r;
-	
+	private volatile boolean pause = false;
+	//constructor declaration
 	public SnakeBoard() {
 		setSize(400, 400);
 		setBackground(Color.BLACK);
+		setFocusable(true);
 		thread = new Thread(this);
 		addKeyListener(new KeyAdapter() {
 			@Override
@@ -38,7 +40,7 @@ public class SnakeBoard extends JPanel implements Runnable {
 	 * 
 	 * @return
 	 */
-	void isAlive() {
+	synchronized void isAlive() {
 		for (int i = 0; i < N-1; i++) {
 			if(block.get(i).x == block.get(N-1).x && block.get(i).y == block.get(N-1).y) {
 				gameover = true;
@@ -58,7 +60,7 @@ public class SnakeBoard extends JPanel implements Runnable {
 			block.get(i).update();
 		}
 		g.setColor(Color.RED);
-		g.fillRect(food.x, food.y, food.width, food.height);
+		g.fillOval(food.x, food.y, food.width, food.height);
 		g.setFont(new Font("Arial", Font.BOLD, 16));
 		g.drawString("Score : "+(N-6), 300, 20);
 		updateDirection();
@@ -95,17 +97,20 @@ public class SnakeBoard extends JPanel implements Runnable {
 	@Override
 	public void run() {
 		while(!gameover) {
-			// checking food is eaten or not
-			if(block.get(N-1).x  == food.x && block.get(N-1).y == food.y) {
-				getFood();
-				head = new Block(block.get(N-1).x, block.get(N-1).y, block.get(N-1).width, block.get(N-1).height);
-				head.direction = block.get(N-1).direction;
-				N++;    // snake size increases
-				head.update();
-				block.add(head);
+			if(!pause) {
+				// checking food is eaten or not
+				if(block.get(N-1).x  == food.x && block.get(N-1).y == food.y) {
+					getFood();
+					head = new Block(block.get(N-1).x, block.get(N-1).y, block.get(N-1).width, block.get(N-1).height);
+					head.direction = block.get(N-1).direction;
+					N++;    // snake size increases
+					head.update();
+					block.add(head);
+				}
+				isAlive();
+				repaint();
+				//System.out.println("Snake Running");
 			}
-			isAlive();
-			repaint();
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
@@ -126,8 +131,19 @@ public class SnakeBoard extends JPanel implements Runnable {
 	 * generates a new food item when invoked
 	 */
 	public void getFood(){
-		
-		food = new Rectangle(r.nextInt(20)* 20, r.nextInt(20)*20, 18, 18);
+		int foodX = r.nextInt(20)* 20;
+		int foodY = r.nextInt(20)* 20;
+		if(!isLieOnSnakeBody(foodX, foodY)) 
+			food = new Rectangle(foodX, foodY, 18, 18);
+		else
+			getFood();
+	}
+	private boolean isLieOnSnakeBody(int foodX, int foodY) {
+		for (Block block2 : block) {
+			if(block2.x == foodX && block2.y == foodY)
+				return true;
+		}
+		return false;
 	}
 	/**
 	 * Update direction of each block to its next block
@@ -143,5 +159,16 @@ public class SnakeBoard extends JPanel implements Runnable {
 	 */
 	public void start() {
 		thread.start();
+	}
+	public boolean isPause(){
+		return pause;
+	}
+	public void setPause() {
+		this.pause = true;
+		//System.out.println("set pause");
+	}
+	public void setResume() {
+		this.pause = false;
+		//System.out.println("set resume");
 	}
 }

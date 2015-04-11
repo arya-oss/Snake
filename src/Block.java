@@ -40,7 +40,7 @@ public class Block extends Rectangle{
 	 */
 	public void paint(Graphics g) {
 		g.setColor(Color.GREEN);
-		g.fillRect(this.x, this.y, this.width, this.height);
+		g.fillOval(this.x, this.y, this.width, this.height);
 	}
 
 }
